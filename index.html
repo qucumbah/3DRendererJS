@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <script src="js/models.js" defer></script>
+  <script src="js/util.js" defer></script>
+  <script src="js/Point.js" defer></script>
+  <script src="js/Transform.js" defer></script>
+  <script src="js/Triangle.js" defer></script>
+  <script src="js/Face.js" defer></script>
+  <script src="js/Mesh.js" defer></script>
+  <script src="js/renderHandler.js" defer></script>
+  <script src="js/main.js" defer></script>
+  <script src="js/test.js" defer></script>
+  <link rel="stylesheet" href="style.css">
+  <title>3D model renderer</title>
+</head>
+<body>
+  <div class="sidePanel">
+    <div class="info">
+      <div>Controls:</div>
+      <div>W, A, S, D, Q, E: rotate model</div>
+      <div>R, F: zoom in / zoom out</div>
+      <div>T: toggle triangle outline rendering</div>
+      <div>Z: toggle zBuffer rendering</div>
+    </div>
+    <div class="chooser">
+      <div>Choose model:</div>
+      <select id="modelChooser"></select>
+    </div>
+  </div>
+  <canvas id="canvas"></canvas>
+</body>
+</html>

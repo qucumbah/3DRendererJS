@@ -1,0 +1,15 @@
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+.sidePanel {
+  position: absolute;
+  padding: 20px;
+  border: 1px solid black;
+  background-color: #fff;
+}
+
+.sidePanel .chooser {
+  margin-top: 20px;
+}
