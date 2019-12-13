@@ -47,7 +47,32 @@ class Transform extends Array {
       return (w !== 0) ? new Point(x / w, y / w, z / w) : new Point(0, 0, 0);
     };
   }
+
+  combine(other) {
+    const result = new Transform();
+    
+    for (let row = 0; row < 4; row++) {
+      for (let col = 0; col < 4; col++) {
+        let sum = 0;
+        for (let i = 0; i < 4; i++) {
+          sum += this[row][i] * other[i][col];
+        }
+        result[row][col] = sum;
+      }
+    }
+
+    return result;
+  }
 }
+
+const getScaleTransform = (scaleX, scaleY, scaleZ) => {
+  const scale = Transform.getIdentity();
+  scale[0][0] = scaleX;
+  scale[1][1] = scaleY;
+  scale[2][2] = scaleZ;
+
+  return scale;
+};
 
 /**
  * @param {Point} position
@@ -111,9 +136,10 @@ const getRotationZTransform = angle => {
  * @returns Transform that when applied to point [x, y, z] projects it into the
  * cube with coordinate range [-1, 1]
  */
-const getProjectionTransform = (projectionSize) => {
+const getProjectionTransform = (projectionSize, perspectiveCoeffitient = 0) => {
   const projection = Transform.getIdentity();
   projection[3][3] = projectionSize;
+  projection[3][2] = perspectiveCoeffitient;
 
   return projection;
 };
@@ -137,3 +163,9 @@ const getViewportTransform = (width, height) => {
 
   return transform;
 };
+
+const getPerspectiveTransform = () => {
+  const result = Transform.getIdentity();
+  result[3][2] = 1;
+  return result;
+}

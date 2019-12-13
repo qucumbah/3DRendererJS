@@ -17,14 +17,4 @@ window.onresize = () => {
 };
 fitCanvas(getWindowDimensions());
 
-const modelChooser = document.getElementById('modelChooser');
-for (const modelName in models) {
-  const option = document.createElement('option');
-  option.innerHTML = modelName;
-  option.value = modelName;
-
-  modelChooser.appendChild(option);
-}
-
-const defaultModelName = 'lShape';
-modelChooser.value = defaultModelName;
+const projectionChooser = document.getElementById('projectionChooser');

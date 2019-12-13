@@ -27,8 +27,15 @@
       <div>Z: toggle zBuffer rendering</div>
     </div>
     <div class="chooser">
-      <div>Choose model:</div>
-      <select id="modelChooser"></select>
+      <div>Choose projection:</div>
+      <select id="projectionChooser">
+        <option value="Freecam">Freecam</option>
+        <option value="Rectangular Isometry">Rectangular Isometry</option>
+        <option value="Rectangular Dimetry">Rectangular Dimetry</option>
+        <option value="Front Oblique Isometry">Front Oblique Isometry</option>
+        <option value="Front Oblique Dimetry">Front Oblique Dimetry</option>
+        <option value="Perspective">Perspective</option>
+      </select>
     </div>
   </div>
   <canvas id="canvas"></canvas>

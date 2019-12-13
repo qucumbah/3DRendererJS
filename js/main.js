@@ -15,10 +15,8 @@ const createMesh = modelArray => {
   return new Mesh(faces, origin);
 };
 
-let mesh = createMesh( models[modelChooser.value] );
-modelChooser.onchange = () => {
-  mesh = createMesh( models[modelChooser.value] );
-};
+const mesh = createMesh( models['cylinderZUp'] );
+const axes = createMesh( models['axes'] );
 
 const rotationSpeed = 0.03;
 window.onkeydown = event => {
@@ -55,12 +53,103 @@ window.onkeypress = event => {
     case 'KeyF': zoom *= zoomSpeed; break;
     case 'KeyT': renderTriangles = !renderTriangles; break;
     case 'KeyZ': renderZBuff = !renderZBuff; break;
+    case 'KeyC': console.log(mesh); break;
   }
 };
 
-const width = canvas.width;
-const height = canvas.height;
-///*
+let projectionMode = projectionChooser.value;
+projectionChooser.onchange = () => {
+  projectionMode = projectionChooser.value;
+};
+
+const renderClassMode = () => {
+  const width = canvas.width;
+  const height = canvas.height;
+
+  let scaleX = 1;
+  let scaleY = 1;
+  let scaleZ = 1;
+  let rotationX = mesh.rotationX;
+  let rotationY = mesh.rotationY;
+  let rotationZ = mesh.rotationZ;
+  let beforeTransform, afterTransform;
+  let perspective = false;
+
+  switch (projectionMode) {
+    case 'Freecam':
+      //Dont need to change anything
+      //scaleZ = -2;
+      break;
+    case 'Rectangular Isometry':
+      rotationX = 0;
+      rotationY = Math.PI;
+      rotationZ = 0;
+      beforeTransform = Transform.getIdentity();
+      beforeTransform[0][0] = -0.86;
+      beforeTransform[0][1] = 0.86;
+      beforeTransform[1][0] = -0.5;
+      beforeTransform[1][1] = -0.5;
+      beforeTransform[1][2] = 1;
+      break;
+    case 'Rectangular Dimetry':
+      rotationX = 0;
+      rotationY = Math.PI;
+      rotationZ = 0;
+      beforeTransform = Transform.getIdentity();
+      beforeTransform[0][0] = -0.99;
+      beforeTransform[0][1] = 0.375;
+      beforeTransform[1][0] = -0.125;
+      beforeTransform[1][1] = -0.33;
+      beforeTransform[1][2] = 1;
+      break;
+    case 'Front Oblique Isometry':
+      rotationX = 0;
+      rotationY = Math.PI;
+      rotationZ = 0;
+      beforeTransform = Transform.getIdentity();
+      beforeTransform[0][0] = -1;
+      beforeTransform[0][1] = 0.71;
+      beforeTransform[1][1] = -0.71;
+      beforeTransform[1][2] = 1;
+      break;
+    case 'Front Oblique Dimetry':
+      rotationX = 0;
+      rotationY = Math.PI;
+      rotationZ = 0;
+      beforeTransform = Transform.getIdentity();
+      beforeTransform[0][0] = -1;
+      beforeTransform[0][1] = 0.71 / 2;
+      beforeTransform[1][1] = -0.71 / 2;
+      beforeTransform[1][2] = 1;
+      break;
+    case 'Perspective':
+      perspective = true;
+    default:
+  }
+
+  render(
+    [mesh, axes],
+    width,
+    height,
+    renderTriangles,
+    renderZBuff,
+    perspective,
+    {
+      zoom,
+      scaleX,
+      scaleY,
+      scaleZ,
+      rotationX,
+      rotationY,
+      rotationZ,
+      beforeTransform,
+      afterTransform,
+    }
+  );
+};
+
+setInterval(renderClassMode, 50);
+/*
 setInterval(() => {
   render(
     [mesh],
@@ -71,7 +160,7 @@ setInterval(() => {
     renderZBuff
   );
 }, 50);
-//*/
+*/
 
 //const timestamp = Date.now();
 /*

@@ -42,11 +42,7 @@ class Point {
   }
 
   dot(other) {
-    return new Point(
-      this.x * other.x,
-      this.y * other.y,
-      this.z * other.z
-    );
+    return this.x * other.x + this.y * other.y + this.z * other.z;
   }
 
   multiply(number) {

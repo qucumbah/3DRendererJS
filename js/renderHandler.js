@@ -39,7 +39,8 @@ const zBufferPut = (zBuffer, x, y, value) => {
  * @param {ImageData} imageData 
  * @param {Number[]} color [R, G, B, A]
  */
-const putPixel = (x, y, imageData, color) => {
+const putPixel = (xIn, y, imageData, color) => {
+  const x = imageData.width - xIn;
   const index = 4 * (y * imageData.width + x);
   imageData.data[index + 0] = color[0];
   imageData.data[index + 1] = color[1];
@@ -215,6 +216,7 @@ const rasterize = (
     const depth = z1 + (z2 - z1) * ((x - x1) / (x2 - x1));
     //Same as in triangle rasterization function
     const closeness = Math.round( 255 - (depth + 1) / 2 * 255 );
+    /*
     if (steep) {
       if ( closeness > zBufferAt(zBuffer, y, x) ) {
         putPixel(y, x, imageData, color);
@@ -225,6 +227,12 @@ const rasterize = (
         putPixel(x, y, imageData, color);
         zBufferPut(zBuffer, x, y, closeness);
       }
+    }
+    */
+    if (steep) {
+      putPixel(y, x, imageData, color);
+    } else {
+      putPixel(x, y, imageData, color);
     }
     error += derror;
  
@@ -254,39 +262,90 @@ const renderFaceOutline = (face, imageData, zBuffer) => {
  * Renders the meshes to canvas with specified parameters
  * 
  * @param {Mesh[]} meshes Array of meshes to render
- * @param {Number} zoom 
  * @param {Number} width Canvas width
  * @param {Number} height Canvas height
  * @param {Boolean} renderTriangles Whether or not to render triangle outline
  * @param {Boolean} renderZBuffer Whether or not to render zBuffer
  */
-const render = (meshes, zoom, width, height, renderTriangles, renderZBuff) => {
+const render = (
+  meshes,
+  width,
+  height,
+  renderTriangles,
+  renderZBuff,
+  perspective,
+  viewSettings,
+) => {
+  const {
+    zoom,
+    scaleX,
+    scaleY,
+    scaleZ,
+    rotationX,
+    rotationY,
+    rotationZ,
+    beforeTransform = Transform.getIdentity(),
+    afterTransform = Transform.getIdentity(),
+  } = viewSettings;
   const ctx = canvas.getContext('2d');
   const imageData = ctx.createImageData(canvas.width, canvas.height);
   const zBuffer = createZBuffer(canvas.width, canvas.height);
 
   meshes.forEach(mesh => {
-    const rotationXTransform = getRotationXTransform( mesh.rotationX );
-    const rotationYTransform = getRotationYTransform( mesh.rotationY );
-    const rotationZTransform = getRotationZTransform( mesh.rotationZ );
+    const scaleTransform = getScaleTransform( scaleX, scaleY, scaleZ );
+    const rotationXTransform = getRotationXTransform( rotationX );
+    const rotationYTransform = getRotationYTransform( rotationY );
+    const rotationZTransform = getRotationZTransform( rotationZ );
     const translationTransform = (
       getTranslationTransform( mesh.position.multiply(-1) )
     );
-    const projectionTransform = getProjectionTransform( zoom );
+    const projectionTransform = (
+      getProjectionTransform(zoom, perspective ? 1 : 0)
+    );
     const viewportTransform = getViewportTransform(width, height);
 
+    const combinedTransform = (
+      afterTransform
+      .combine(viewportTransform)
+      .combine(projectionTransform)
+      .combine(translationTransform)
+      .combine(rotationZTransform)
+      .combine(rotationYTransform)
+      .combine(rotationXTransform)
+      .combine(scaleTransform)
+      .combine(beforeTransform)
+    );
+
     mesh.forEach(face => {
+      const faceTransformed = face.applyTransform(combinedTransform);
+      /*
       const faceTransformed = face
+        .applyTransform(scaleTransform)
         .applyTransform(rotationXTransform)
         .applyTransform(rotationYTransform)
         .applyTransform(rotationZTransform)
         .applyTransform(translationTransform)
         .applyTransform(projectionTransform)
         .applyTransform(viewportTransform);
-      
-      renderFaceOutline(faceTransformed, imageData, zBuffer);
+      */
 
       const triangles = divideToTriangles(faceTransformed);
+
+      const {p1, p2, p3} = triangles[0];
+      const e1 = p2.subtract(p1);
+      const e2 = p3.subtract(p1);
+      const crossProduct = e1.cross(e2);
+      const eyeDirection = new Point(0, 0, 1);
+      //console.log(eyeDirection.dot(crossProduct));
+      if (eyeDirection.dot(crossProduct) < 0) {
+        return;
+      }
+      
+      renderFaceOutline(faceTransformed, imageData, zBuffer);
+      
+      if (!renderTriangles) {
+        return;
+      }
 
       triangles.forEach(triangle => {
         const white = [255, 255, 255, 255];
