@@ -18,6 +18,8 @@ const createMesh = modelArray => {
 const mesh = createMesh( models['cylinderZUp'] );
 const axes = createMesh( models['axes'] );
 
+//axes.position = new Point(2, 2, 0);
+
 const rotationSpeed = 0.03;
 window.onkeydown = event => {
   switch (event.code) {

@@ -250,11 +250,10 @@ const rasterize = (
  * @param {ImageData} imageData 
  * @param {Uint8ClampedArray} zBuffer 
  */
-const renderFaceOutline = (face, imageData, zBuffer) => {
+const renderFaceOutline = (face, imageData, zBuffer, color) => {
   face.forEach((curPoint, index) => {
     const prevPoint = (index === 0) ? face[face.length - 1] : face[index - 1];
-    const black = [0, 0, 0, 255];
-    drawLine(prevPoint, curPoint, black, imageData, zBuffer);
+    drawLine(prevPoint, curPoint, color, imageData, zBuffer);
   });
 };
 
@@ -291,7 +290,7 @@ const render = (
   const imageData = ctx.createImageData(canvas.width, canvas.height);
   const zBuffer = createZBuffer(canvas.width, canvas.height);
 
-  meshes.forEach(mesh => {
+  meshes.forEach((mesh, meshNumber) => {
     const scaleTransform = getScaleTransform( scaleX, scaleY, scaleZ );
     const rotationXTransform = getRotationXTransform( rotationX );
     const rotationYTransform = getRotationYTransform( rotationY );
@@ -341,7 +340,11 @@ const render = (
         return;
       }
       
-      renderFaceOutline(faceTransformed, imageData, zBuffer);
+      const red = [255, 0, 0, 255];
+      const blue = [0, 0, 255, 255];
+      const color = (meshNumber === 1) ? red : blue;
+
+      renderFaceOutline(faceTransformed, imageData, zBuffer, color);
       
       if (!renderTriangles) {
         return;
