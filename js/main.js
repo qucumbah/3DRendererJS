@@ -18,8 +18,6 @@ const createMesh = modelArray => {
 const mesh = createMesh( models['cylinderZUp'] );
 const axes = createMesh( models['axes'] );
 
-//axes.position = new Point(2, 2, 0);
-
 const rotationSpeed = 0.03;
 window.onkeydown = event => {
   switch (event.code) {
@@ -64,6 +62,11 @@ projectionChooser.onchange = () => {
   projectionMode = projectionChooser.value;
 };
 
+let additionalAngle = angleChooser.value;
+angleChooser.oninput = () => {
+  additionalAngle = angleChooser.value;
+};
+
 const renderClassMode = () => {
   const width = canvas.width;
   const height = canvas.height;
@@ -74,19 +77,15 @@ const renderClassMode = () => {
   let rotationX = mesh.rotationX;
   let rotationY = mesh.rotationY;
   let rotationZ = mesh.rotationZ;
-  let beforeTransform, afterTransform;
+  const beforeTransform = Transform.getIdentity();
+  const afterTransform = Transform.getIdentity();
   let perspective = false;
 
   switch (projectionMode) {
-    case 'Freecam':
-      //Dont need to change anything
-      //scaleZ = -2;
-      break;
     case 'Rectangular Isometry':
       rotationX = 0;
       rotationY = Math.PI;
       rotationZ = 0;
-      beforeTransform = Transform.getIdentity();
       beforeTransform[0][0] = -0.86;
       beforeTransform[0][1] = 0.86;
       beforeTransform[1][0] = -0.5;
@@ -97,7 +96,6 @@ const renderClassMode = () => {
       rotationX = 0;
       rotationY = Math.PI;
       rotationZ = 0;
-      beforeTransform = Transform.getIdentity();
       beforeTransform[0][0] = -0.99;
       beforeTransform[0][1] = 0.375;
       beforeTransform[1][0] = -0.125;
@@ -108,7 +106,6 @@ const renderClassMode = () => {
       rotationX = 0;
       rotationY = Math.PI;
       rotationZ = 0;
-      beforeTransform = Transform.getIdentity();
       beforeTransform[0][0] = -1;
       beforeTransform[0][1] = 0.71;
       beforeTransform[1][1] = -0.71;
@@ -118,11 +115,13 @@ const renderClassMode = () => {
       rotationX = 0;
       rotationY = Math.PI;
       rotationZ = 0;
-      beforeTransform = Transform.getIdentity();
       beforeTransform[0][0] = -1;
       beforeTransform[0][1] = 0.71 / 2;
       beforeTransform[1][1] = -0.71 / 2;
       beforeTransform[1][2] = 1;
+      break;
+    case 'Freecam':
+      //Dont need to change anything
       break;
     case 'Perspective':
       perspective = true;
@@ -146,6 +145,7 @@ const renderClassMode = () => {
       rotationZ,
       beforeTransform,
       afterTransform,
+      additionalAngle: additionalAngle / 360 * Math.PI,
     }
   );
 };

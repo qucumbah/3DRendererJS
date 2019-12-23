@@ -169,7 +169,7 @@ const renderZBuffer = (zBuffer, imageData) => {
  * @param {ImageData} imageData 
  * @param {Uint8ClampedArray} zBuffer 
  */
-const drawLine = (p1, p2, color, imageData, zBuffer) => {
+const drawLine = (p1, p2, color, imageData, zBuffer, overrideZBuffer) => {
   const x1 = Math.floor(p1.x);
   const y1 = Math.floor(p1.y);
   const x2 = Math.floor(p2.x);
@@ -178,9 +178,13 @@ const drawLine = (p1, p2, color, imageData, zBuffer) => {
   const z2 = p2.z;
 
   if (Math.abs(x1 - x2) < Math.abs(y1 - y2)) {
-    rasterize(y1, x1, z1, y2, x2, z2, true, color, imageData, zBuffer);
+    rasterize(
+      y1, x1, z1, y2, x2, z2, true, color, imageData, zBuffer, overrideZBuffer
+    );
   } else {
-    rasterize(x1, y1, z1, x2, y2, z2, false, color, imageData, zBuffer);
+    rasterize(
+      x1, y1, z1, x2, y2, z2, false, color, imageData, zBuffer, overrideZBuffer
+    );
   }
 }
 
@@ -189,7 +193,8 @@ const rasterize = (
   steep,
   color,
   imageData,
-  zBuffer
+  zBuffer,
+  overrideZBuffer
 ) => {
   if (x1 > x2) {
     let temp;
@@ -214,9 +219,12 @@ const rasterize = (
   let y = y1;
   for (let x = x1; x <= x2; x++) {
     const depth = z1 + (z2 - z1) * ((x - x1) / (x2 - x1));
-    //Same as in triangle rasterization function
-    const closeness = Math.round( 255 - (depth + 1) / 2 * 255 );
-    /*
+    //Same as in triangle rasterization function; if overrideZBuffer is true
+    //we dont have to use actual closeness, we just consider any point as
+    //being as close to the camera as it can be
+    const actualCloseness = Math.round( 255 - (depth + 1) / 2 * 255 );
+    const closeness = overrideZBuffer ? 255 : actualCloseness;
+    ///*
     if (steep) {
       if ( closeness > zBufferAt(zBuffer, y, x) ) {
         putPixel(y, x, imageData, color);
@@ -228,12 +236,14 @@ const rasterize = (
         zBufferPut(zBuffer, x, y, closeness);
       }
     }
-    */
+    //*/
+    /*
     if (steep) {
       putPixel(y, x, imageData, color);
     } else {
       putPixel(x, y, imageData, color);
     }
+    */
     error += derror;
  
     if (error > 0.5) {
@@ -250,10 +260,16 @@ const rasterize = (
  * @param {ImageData} imageData 
  * @param {Uint8ClampedArray} zBuffer 
  */
-const renderFaceOutline = (face, imageData, zBuffer, color) => {
+const renderFaceOutline = (
+  face,
+  imageData,
+  zBuffer,
+  color,
+  overrideZBuffer
+) => {
   face.forEach((curPoint, index) => {
     const prevPoint = (index === 0) ? face[face.length - 1] : face[index - 1];
-    drawLine(prevPoint, curPoint, color, imageData, zBuffer);
+    drawLine(prevPoint, curPoint, color, imageData, zBuffer, overrideZBuffer);
   });
 };
 
@@ -283,9 +299,11 @@ const render = (
     rotationX,
     rotationY,
     rotationZ,
-    beforeTransform = Transform.getIdentity(),
-    afterTransform = Transform.getIdentity(),
+    additionalAngle,
+    beforeTransform,
+    afterTransform,
   } = viewSettings;
+  
   const ctx = canvas.getContext('2d');
   const imageData = ctx.createImageData(canvas.width, canvas.height);
   const zBuffer = createZBuffer(canvas.width, canvas.height);
@@ -303,6 +321,11 @@ const render = (
     );
     const viewportTransform = getViewportTransform(width, height);
 
+    //Spaghetti, but the deadline is tomorrow
+    const beforeTransformWithAngle = beforeTransform.combine(
+      getRotationZTransform( (meshNumber === 0) ? additionalAngle : 0 )
+    );
+
     const combinedTransform = (
       afterTransform
       .combine(viewportTransform)
@@ -312,7 +335,7 @@ const render = (
       .combine(rotationYTransform)
       .combine(rotationXTransform)
       .combine(scaleTransform)
-      .combine(beforeTransform)
+      .combine(beforeTransformWithAngle)
     );
 
     mesh.forEach(face => {
@@ -336,15 +359,24 @@ const render = (
       const crossProduct = e1.cross(e2);
       const eyeDirection = new Point(0, 0, 1);
       //console.log(eyeDirection.dot(crossProduct));
-      if (eyeDirection.dot(crossProduct) < 0) {
-        return;
-      }
+      const isVisible = eyeDirection.dot(crossProduct) > 0;
       
       const red = [255, 0, 0, 255];
       const blue = [0, 0, 255, 255];
-      const color = (meshNumber === 1) ? red : blue;
+      const black = [0, 0, 0, 255];
+      const gray = [200, 200, 200, 255];
+      const lightGray = [240, 240, 240, 255];
+      const color = (meshNumber === 1) ? red : (isVisible ? black : lightGray);
+      //Always draw faces that face the camera
+      const overrideZBuffer = (meshNumber === 1 || !isVisible) ? false : true;
 
-      renderFaceOutline(faceTransformed, imageData, zBuffer, color);
+      renderFaceOutline(
+        faceTransformed,
+        imageData,
+        zBuffer,
+        color,
+        overrideZBuffer
+      );
       
       if (!renderTriangles) {
         return;

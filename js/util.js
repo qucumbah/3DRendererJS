@@ -18,3 +18,4 @@ window.onresize = () => {
 fitCanvas(getWindowDimensions());
 
 const projectionChooser = document.getElementById('projectionChooser');
+const angleChooser = document.getElementById('angleChooser');
