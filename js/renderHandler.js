@@ -41,6 +41,11 @@ const zBufferPut = (zBuffer, x, y, value) => {
  */
 const putPixel = (xIn, y, imageData, color) => {
   const x = imageData.width - xIn;
+
+  if (x < 0 || x > imageData.width || y < 0 || y > imageData.height) {
+    return;
+  }
+
   const index = 4 * (y * imageData.width + x);
   imageData.data[index + 0] = color[0];
   imageData.data[index + 1] = color[1];
@@ -132,7 +137,7 @@ const drawTriangle = (triangle, fillColor, edgeColor, imageData, zBuffer) => {
       //the one we'll use because now we can more easily compare point's Z
       //component with the buffer value. So the final formula is:
       //closeness = 255 - (p.z - (-1)) / (1 - (-1)) * 255
-      const closeness = Math.round( 255 - (p.z + 1) / 2 * 255 );
+      const closeness = Math.round( 255 - (p.z + 1) / 4 * 255 );
       
       if ( closeness > zBufferAt(zBuffer, pInt.x, pInt.y) ) {
         putPixel(
@@ -222,7 +227,7 @@ const rasterize = (
     //Same as in triangle rasterization function; if overrideZBuffer is true
     //we dont have to use actual closeness, we just consider any point as
     //being as close to the camera as it can be
-    const actualCloseness = Math.round( 255 - (depth + 1) / 2 * 255 );
+    const actualCloseness = Math.round( 255 - (depth + 1) / 4 * 255 );
     const closeness = overrideZBuffer ? 255 : actualCloseness;
     ///*
     if (steep) {
@@ -366,9 +371,9 @@ const render = (
       const black = [0, 0, 0, 255];
       const gray = [200, 200, 200, 255];
       const lightGray = [240, 240, 240, 255];
-      const color = (meshNumber === 1) ? red : (isVisible ? black : lightGray);
+      const color = (meshNumber !== 0) ? red : (isVisible ? black : lightGray);
       //Always draw faces that face the camera
-      const overrideZBuffer = (meshNumber === 1 || !isVisible) ? false : true;
+      const overrideZBuffer = (meshNumber !== 0 || !isVisible) ? false : true;
 
       renderFaceOutline(
         faceTransformed,

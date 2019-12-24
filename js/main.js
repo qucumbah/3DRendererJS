@@ -15,8 +15,10 @@ const createMesh = modelArray => {
   return new Mesh(faces, origin);
 };
 
-const mesh = createMesh( models['cylinderZUp'] );
+const mesh = createMesh( models['palatka2'] );
 const axes = createMesh( models['axes'] );
+axes.position = new Point(2, 0, 0);
+const horizon = createMesh( models['horizon'] );
 
 const rotationSpeed = 0.03;
 window.onkeydown = event => {
@@ -66,6 +68,19 @@ let additionalAngle = angleChooser.value;
 angleChooser.oninput = () => {
   additionalAngle = angleChooser.value;
 };
+
+let shiftX = shiftXChooser.value;
+shiftXChooser.oninput = () => {
+  shiftX = shiftXChooser.value;
+}
+let shiftY = shiftYChooser.value;
+shiftYChooser.oninput = () => {
+  shiftY = shiftYChooser.value;
+}
+let shiftZ = shiftZChooser.value;
+shiftZChooser.oninput = () => {
+  shiftZ = shiftZChooser.value;
+}
 
 const renderClassMode = () => {
   const width = canvas.width;
@@ -124,12 +139,22 @@ const renderClassMode = () => {
       //Dont need to change anything
       break;
     case 'Perspective':
+      rotationX = Math.PI * -0.5;
+      rotationY = Math.PI * 0;
+      rotationZ = Math.PI * 0;
       perspective = true;
+      scaleX = 0.8;
+      scaleY = 0.8;
+      scaleZ = 0.8;
+      beforeTransform[0][1] = (shiftX - 50) / -100;
+      beforeTransform[1][1] = shiftY / 100;
+      beforeTransform[2][1] = -shiftY / 100;
+      beforeTransform[2][1] = (shiftZ - 50) / -100;
     default:
   }
 
   render(
-    [mesh, axes],
+    [mesh, axes, horizon],
     width,
     height,
     renderTriangles,
@@ -145,7 +170,7 @@ const renderClassMode = () => {
       rotationZ,
       beforeTransform,
       afterTransform,
-      additionalAngle: additionalAngle / 360 * Math.PI,
+      additionalAngle: additionalAngle / 180 * Math.PI,
     }
   );
 };

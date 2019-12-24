@@ -19,3 +19,7 @@ fitCanvas(getWindowDimensions());
 
 const projectionChooser = document.getElementById('projectionChooser');
 const angleChooser = document.getElementById('angleChooser');
+
+const shiftXChooser = document.getElementById('shiftXChooser');
+const shiftZChooser = document.getElementById('shiftZChooser');
+const shiftYChooser = document.getElementById('shiftYChooser');

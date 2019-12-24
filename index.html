@@ -34,13 +34,28 @@
         <option value="Front Oblique Isometry">Front Oblique Isometry</option>
         <option value="Front Oblique Dimetry">Front Oblique Dimetry</option>
         <option value="Freecam">Freecam</option>
-        <option value="Perspective">Perspective</option>
+        <option value="Perspective" selected="true">Perspective</option>
       </select>
     </div>
     <div class="chooser">
       <b>0</b>
       <input type="range" id="angleChooser" min="0" max="360">
       <b>360</b>
+    </div>
+    <div class="chooser">
+      <b>Only for perspective</b><br>
+      <div>
+        <b>Shift X</b>
+        <input type="range" id="shiftXChooser" min="0" max="100" value="100">
+      </div>
+      <div>
+        <b>Height</b>
+        <input type="range" id="shiftZChooser" min="0" max="100" value="85">
+      </div>
+      <div style="display: none;">
+        <b>Depth</b>
+        <input type="range" id="shiftYChooser" min="0" max="100" value="100">
+      </div>
     </div>
   </div>
   <canvas id="canvas"></canvas>
