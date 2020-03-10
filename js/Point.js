@@ -1,6 +1,9 @@
+// Grouping operands using '*' helps readability in this case
+/* eslint-disable space-infix-ops */
+
 /**
  * Wrapper for vector of 3 numbers with a few math methods
- * 
+ *
  * @typedef {Object} Point
  * @property {Number} x
  * @property {Number} y
@@ -42,7 +45,7 @@ class Point {
   }
 
   dot(other) {
-    return this.x * other.x + this.y * other.y + this.z * other.z;
+    return this.x*other.x + this.y*other.y + this.z*other.z;
   }
 
   multiply(number) {
@@ -54,9 +57,9 @@ class Point {
   }
 
   length() {
-    return Math.sqrt( this.x * this.x + this.y * this.y + this.z * this.z );
+    return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
   }
-  
+
   flipY() {
     return new Point(
       this.x,

@@ -1,6 +1,8 @@
+/* eslint-disable dot-notation */
+
 /**
  * Creates a mesh from faces represented as arrays
- * 
+ *
  * @param {Number[][]} modelArray Array which contains faces represented as
  * arrays of numbers. Each set of  3 numbers in these arrays represent a vertex
  * in 3D space:
@@ -9,19 +11,23 @@
  *   ... (other faces)
  * ]
  */
-const createMesh = modelArray => {
-  const faces = modelArray.map( coordsArray => new Face(coordsArray) );
+const createMesh = (modelArray) => {
+  const faces = modelArray.map((coordsArray) => new Face(coordsArray));
   const origin = new Point(0, 0, 0);
   return new Mesh(faces, origin);
 };
 
-const mesh = createMesh( models['palatka2'] );
-const axes = createMesh( models['axes'] );
+const mesh = createMesh(models['palatka2']);
+const axes = createMesh(models['axes']);
 axes.position = new Point(2, 0, 0);
-const horizon = createMesh( models['horizon'] );
+// This is a little trick that I implemented to avoid coding horizon renderer:
+// I replaced it with a 3D object of a line 'far away' from the screen so that
+// it looks like its infinitely far away. It wasn't far enough though, which was
+// quickly noticed on exam... whoops
+const horizon = createMesh(models['horizon']);
 
 const rotationSpeed = 0.03;
-window.onkeydown = event => {
+window.onkeydown = (event) => {
   switch (event.code) {
     case 'KeyW': mesh.rotationSpeedX = rotationSpeed; break;
     case 'KeyS': mesh.rotationSpeedX = -rotationSpeed; break;
@@ -29,9 +35,10 @@ window.onkeydown = event => {
     case 'KeyD': mesh.rotationSpeedY = -rotationSpeed; break;
     case 'KeyQ': mesh.rotationSpeedZ = rotationSpeed; break;
     case 'KeyE': mesh.rotationSpeedZ = -rotationSpeed; break;
+    default:
   }
 };
-window.onkeyup = event => {
+window.onkeyup = (event) => {
   switch (event.code) {
     case 'KeyW': mesh.rotationSpeedX = 0; break;
     case 'KeyS': mesh.rotationSpeedX = 0; break;
@@ -39,23 +46,26 @@ window.onkeyup = event => {
     case 'KeyD': mesh.rotationSpeedY = 0; break;
     case 'KeyQ': mesh.rotationSpeedZ = 0; break;
     case 'KeyE': mesh.rotationSpeedZ = 0; break;
+    default:
   }
 };
 
-//let zoom = 1;
+// let zoom = 1;
 let zoom = 5;
 const zoomSpeed = 1.1;
 
 let renderTriangles = false;
 let renderZBuff = false;
 
-window.onkeypress = event => {
+// Miscellaneous controls
+window.onkeypress = (event) => {
   switch (event.code) {
     case 'KeyR': zoom /= zoomSpeed; break;
     case 'KeyF': zoom *= zoomSpeed; break;
     case 'KeyT': renderTriangles = !renderTriangles; break;
     case 'KeyZ': renderZBuff = !renderZBuff; break;
     case 'KeyC': console.log(mesh); break;
+    default:
   }
 };
 
@@ -72,26 +82,24 @@ angleChooser.oninput = () => {
 let shiftX = shiftXChooser.value;
 shiftXChooser.oninput = () => {
   shiftX = shiftXChooser.value;
-}
+};
 let shiftY = shiftYChooser.value;
 shiftYChooser.oninput = () => {
   shiftY = shiftYChooser.value;
-}
+};
 let shiftZ = shiftZChooser.value;
 shiftZChooser.oninput = () => {
   shiftZ = shiftZChooser.value;
-}
+};
 
-const renderClassMode = () => {
-  const width = canvas.width;
-  const height = canvas.height;
+//
+const renderUniMode = () => {
+  const { width, height } = canvas;
 
   let scaleX = 1;
   let scaleY = 1;
   let scaleZ = 1;
-  let rotationX = mesh.rotationX;
-  let rotationY = mesh.rotationY;
-  let rotationZ = mesh.rotationZ;
+  let { rotationX, rotationY, rotationZ } = mesh;
   const beforeTransform = Transform.getIdentity();
   const afterTransform = Transform.getIdentity();
   let perspective = false;
@@ -136,7 +144,7 @@ const renderClassMode = () => {
       beforeTransform[1][2] = 1;
       break;
     case 'Freecam':
-      //Dont need to change anything
+      // Dont need to change anything
       break;
     case 'Perspective':
       rotationX = Math.PI * -0.5;
@@ -150,8 +158,22 @@ const renderClassMode = () => {
       beforeTransform[1][1] = shiftY / 100;
       beforeTransform[2][1] = -shiftY / 100;
       beforeTransform[2][1] = (shiftZ - 50) / -100;
+      break;
     default:
   }
+
+  const viewSettings = {
+    zoom,
+    scaleX,
+    scaleY,
+    scaleZ,
+    rotationX,
+    rotationY,
+    rotationZ,
+    beforeTransform,
+    afterTransform,
+    additionalAngle: (additionalAngle / 180) * Math.PI,
+  };
 
   render(
     [mesh, axes, horizon],
@@ -160,22 +182,11 @@ const renderClassMode = () => {
     renderTriangles,
     renderZBuff,
     perspective,
-    {
-      zoom,
-      scaleX,
-      scaleY,
-      scaleZ,
-      rotationX,
-      rotationY,
-      rotationZ,
-      beforeTransform,
-      afterTransform,
-      additionalAngle: additionalAngle / 180 * Math.PI,
-    }
+    viewSettings,
   );
 };
 
-setInterval(renderClassMode, 50);
+setInterval(renderUniMode, 50);
 /*
 setInterval(() => {
   render(
@@ -189,7 +200,7 @@ setInterval(() => {
 }, 50);
 */
 
-//const timestamp = Date.now();
+// const timestamp = Date.now();
 /*
 render(
   [mesh],
@@ -200,4 +211,4 @@ render(
   renderZBuff
 );
 */
-//console.log('Render finished in', Date.now() - timestamp, 'ms');
+// console.log('Render finished in', Date.now() - timestamp, 'ms');

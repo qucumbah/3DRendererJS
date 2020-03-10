@@ -1,27 +1,24 @@
 /**
  * Mesh is an object that consists of faces. It also has its own position and
  * rotation
- * 
+ *
  * @typedef {Face[]} Mesh
  */
 class Mesh extends Array {
   /**
    * Creates a mesh with the specified rotation origin
-   * 
+   *
    * @param {Face[]} faces Model's faces
    * @param {Point} origin Rotation origin
    */
-  constructor(faces, origin) {
+  constructor(faces, origin = new Point(0, 0, 0)) {
     super();
-    if (origin === undefined) {
-      origin = new Point(0, 0, 0);
-    }
 
-    const translationTransform = getTranslationTransform( origin.multiply(-1) );
+    const translationTransform = getTranslationTransform(origin.multiply(-1));
     const translatedFaces = faces.map(
-      face => face.applyTransform(translationTransform)
+      (face) => face.applyTransform(translationTransform)
     );
-    translatedFaces.forEach(face => this.push(face));
+    translatedFaces.forEach((face) => this.push(face));
 
     this.position = new Point(0, 0, 0);
 

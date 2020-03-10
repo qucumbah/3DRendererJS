@@ -1,3 +1,7 @@
+/* eslint-disable no-multi-spaces */
+/* eslint-disable array-bracket-spacing */
+/* eslint-disable comma-spaces */
+/* eslint-disable max-len */
 const models = {};
 
 models.triangulatedCube = [
