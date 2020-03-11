@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 /**
  * Creates a new zBuffer
  *
@@ -18,9 +19,8 @@ const createZBuffer = (width, height) => {
  * @param {Number} x
  * @param {Number} y
  */
-const zBufferAt = (zBuffer, x, y) => {
-  return zBuffer[y * zBuffer.width + x];
-};
+const zBufferAt = (zBuffer, x, y) => zBuffer[y * zBuffer.width + x];
+
 /**
  * Sets the specified value in zBuffer[x][y]
  * @param {Uint8ClampedArray} zBuffer
@@ -46,6 +46,8 @@ const putPixel = (xIn, y, imageData, color) => {
     return;
   }
 
+  // Here destructuring hinders visibility
+  /* eslint-disable prefer-destructuring */
   const index = 4 * (y * imageData.width + x);
   imageData.data[index + 0] = color[0];
   imageData.data[index + 1] = color[1];
@@ -72,27 +74,27 @@ const drawTriangle = (triangle, fillColor, edgeColor, imageData, zBuffer) => {
     const secondHalf = (i > firstHalfHeight) || (firstHalfHeight === 0);
     const segmentHeight = secondHalf ? secondHalfHeight : firstHalfHeight;
 
-    //[0 - 1] what part of the triangle we've drawn
+    // [0 - 1] what part of the triangle we've drawn
     const alpha = i / totalHeight;
-    //[0 - 1] what part of the segment we've drawn
-    const beta = ( i - (secondHalf ? firstHalfHeight : 0) ) / segmentHeight;
+    // [0 - 1] what part of the segment we've drawn
+    const beta = (i - (secondHalf ? firstHalfHeight : 0)) / segmentHeight;
 
-    //Point between the highest point and the lowest point:
-    //a = p0 + (p2 - p0) * alpha
-    let a = triangle[0].add(
+    // Point between the highest point and the lowest point:
+    // a = p0 + (p2 - p0) * alpha
+    const a = triangle[0].add(
       triangle[2].subtract(triangle[0]).multiply(alpha)
     );
 
     let b;
     if (secondHalf) {
-      //Point between lowest point and middle point
-      //b = p1 + (p2 - p1) * beta
+      // Point between lowest point and middle point
+      // b = p1 + (p2 - p1) * beta
       b = triangle[1].add(
         triangle[2].subtract(triangle[1]).multiply(beta)
       );
     } else {
-      //Point between highest point and middle point
-      //b = p0 + (p1 - p0) * beta
+      // Point between highest point and middle point
+      // b = p0 + (p1 - p0) * beta
       b = triangle[0].add(
         triangle[1].subtract(triangle[0]).multiply(beta)
       );
@@ -110,40 +112,45 @@ const drawTriangle = (triangle, fillColor, edgeColor, imageData, zBuffer) => {
       );
 
       if (outOfBoundsX || outOfBoundsY) {
+        // eslint-disable-next-line no-continue
         continue;
       }
 
       const isTriangleEdge = (
-        j === aInt.x ||
-        j === bInt.x ||
-        i === 0 ||
-        i === Math.floor(totalHeight)
+        j === aInt.x
+        || j === bInt.x
+        || i === 0
+        || i === Math.floor(totalHeight)
       );
 
-      //[0 - 1] What part of the horizontal line we've drawn
+      // [0 - 1] What part of the horizontal line we've drawn
       const phi = (aInt.x === bInt.x) ? 1 : (j - aInt.x) / (bInt.x - aInt.x);
-      //Point between leftmost and rightmost points of the horizontal line
-      //p = left + (right - left) * phi
-      const p = a.add( b.subtract(a).multiply(phi) );
+      // Point between leftmost and rightmost points of the horizontal line
+      // p = left + (right - left) * phi
+      const p = a.add(b.subtract(a).multiply(phi));
       const pInt = p.toIntegerPoint();
 
-      //zBuffer is a unsigned int8 array, which means that it can only contain
-      //values between 0 and 255. As well as that, its initialized with zeroes.
-      //Our point Z value after projection normally lays somewhere in range
-      //[-1; 1], where -1 is the closest an object can get, 1 is the furthest.
-      //If we transform our interval [-1; 1] to [0, 255], then 0 will be the
-      //closest, 255 the furthest Z value of the point can be. If we reverse it,
-      //we'll have 255 as the closest and 0 as the furthest. This combination is
-      //the one we'll use because now we can more easily compare point's Z
-      //component with the buffer value. So the final formula is:
-      //closeness = 255 - (p.z - (-1)) / (1 - (-1)) * 255
-      const closeness = Math.round( 255 - (p.z + 1) / 4 * 255 );
+      /*
+      zBuffer is a unsigned int8 array, which means that it can only contain
+      values between 0 and 255. As well as that, its initialized with zeroes.
+      Our point Z value after projection normally lays somewhere in range
+      [-1; 1], where -1 is the closest an object can get, 1 is the furthest.
+      If we transform our interval [-1; 1] to [0, 255], then 0 will be the
+      closest, 255 the furthest Z value of the point can be. If we reverse it,
+      we'll have 255 as the closest and 0 as the furthest. This combination is
+      the one we'll use because now we can more easily compare point's Z
+      component with the buffer value. So the final formula is:
+      closeness = 255 - (p.z - (-1)) / (1 - (-1)) * 255
+      */
+      const closeness = Math.round(255 - ((p.z + 1) / 4) * 255);
 
-      if ( closeness > zBufferAt(zBuffer, pInt.x, pInt.y) ) {
+      if (closeness > zBufferAt(zBuffer, pInt.x, pInt.y)) {
         putPixel(
           pInt.x,
           pInt.y,
-          imageData, isTriangleEdge ? edgeColor : fillColor);
+          imageData,
+          isTriangleEdge ? edgeColor : fillColor,
+        );
         zBufferPut(zBuffer, pInt.x, pInt.y, closeness);
       }
     }
@@ -161,6 +168,83 @@ const renderZBuffer = (zBuffer, imageData) => {
     for (let j = 0; j < zBuffer.height; j += 1) {
       const tone = zBufferAt(zBuffer, i, j);
       putPixel(i, j, imageData, [tone, tone, tone, 255]);
+    }
+  }
+};
+
+/**
+ * Rasterizes a line using modified Bresenham's algorithm
+ * z coordinates are used to determine line visibility using zBuffer values
+ *
+ * @param {Number} x1
+ * @param {Number} y1
+ * @param {Number} z1
+ * @param {Number} x2
+ * @param {Number} y2
+ * @param {Number} z2
+ * @param {Boolean} steep
+ * @param {*} color
+ * @param {*} imageData
+ * @param {*} zBuffer
+ * @param {*} overrideZBuffer
+ */
+const rasterize = (
+  x1, y1, z1, x2, y2, z2,
+  steep,
+  color,
+  imageData,
+  zBuffer,
+  overrideZBuffer
+) => {
+  if (x1 > x2) {
+    let temp;
+    // Swap x1, x2
+    temp = x1;
+    x1 = x2;
+    x2 = temp;
+    // Swap y1, y2
+    temp = y1;
+    y1 = y2;
+    y2 = temp;
+    // Swap z1, z2
+    temp = z1;
+    z1 = z2;
+    z2 = temp;
+  }
+
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const derror = Math.abs(dy / dx);
+  let error = 0;
+  let y = y1;
+  for (let x = x1; x <= x2; x += 1) {
+    const depth = z1 + (z2 - z1) * ((x - x1) / (x2 - x1));
+    // Same as in triangle rasterization function; if overrideZBuffer is true
+    // we dont have to use actual closeness, we just consider any point as
+    // being as close to the camera as it can be
+    const actualCloseness = Math.round(255 - ((depth + 1) / 4) * 255);
+    const closeness = overrideZBuffer ? 255 : actualCloseness;
+    if (steep) {
+      if (closeness > zBufferAt(zBuffer, y, x)) {
+        putPixel(y, x, imageData, color);
+        zBufferPut(zBuffer, y, x, closeness);
+      }
+    } else if (closeness > zBufferAt(zBuffer, x, y)) {
+      putPixel(x, y, imageData, color);
+      zBufferPut(zBuffer, x, y, closeness);
+    }
+    /*
+    if (steep) {
+      putPixel(y, x, imageData, color);
+    } else {
+      putPixel(x, y, imageData, color);
+    }
+    */
+    error += derror;
+
+    if (error > 0.5) {
+      y += (y2 > y1) ? 1 : -1;
+      error -= 1;
     }
   }
 };
@@ -190,85 +274,6 @@ const drawLine = (p1, p2, color, imageData, zBuffer, overrideZBuffer) => {
     rasterize(
       x1, y1, z1, x2, y2, z2, false, color, imageData, zBuffer, overrideZBuffer
     );
-  }
-}
-
-/**
- * Rasterizes a line using modified Bresenham's algorithm
- * z coordinates are used to determine line visibility using zBuffer values
- *
- * @param {Number} x1
- * @param {Number} y1
- * @param {Number} z1
- * @param {Number} x2
- * @param {Number} y2
- * @param {Number} z2
- * @param {Boolean} steep
- * @param {*} color
- * @param {*} imageData
- * @param {*} zBuffer
- * @param {*} overrideZBuffer
- */
-const rasterize = (
-  x1, y1, z1, x2, y2, z2,
-  steep,
-  color,
-  imageData,
-  zBuffer,
-  overrideZBuffer
-) => {
-  if (x1 > x2) {
-    let temp;
-    //Swap x1, x2
-    temp = x1;
-    x1 = x2;
-    x2 = temp;
-    //Swap y1, y2
-    temp = y1;
-    y1 = y2;
-    y2 = temp;
-    //Swap z1, z2
-    temp = z1;
-    z1 = z2;
-    z2 = temp;
-  }
-
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-  const derror = Math.abs(dy / dx);
-  let error = 0;
-  let y = y1;
-  for (let x = x1; x <= x2; x += 1) {
-    const depth = z1 + (z2 - z1) * ((x - x1) / (x2 - x1));
-    // Same as in triangle rasterization function; if overrideZBuffer is true
-    // we dont have to use actual closeness, we just consider any point as
-    // being as close to the camera as it can be
-    const actualCloseness = Math.round( 255 - (depth + 1) / 4 * 255 );
-    const closeness = overrideZBuffer ? 255 : actualCloseness;
-    if (steep) {
-      if ( closeness > zBufferAt(zBuffer, y, x) ) {
-        putPixel(y, x, imageData, color);
-        zBufferPut(zBuffer, y, x, closeness);
-      }
-    } else {
-      if ( closeness > zBufferAt(zBuffer, x, y) ) {
-        putPixel(x, y, imageData, color);
-        zBufferPut(zBuffer, x, y, closeness);
-      }
-    }
-    /*
-    if (steep) {
-      putPixel(y, x, imageData, color);
-    } else {
-      putPixel(x, y, imageData, color);
-    }
-    */
-    error += derror;
-
-    if (error > 0.5) {
-      y += ( (y2 > y1) ? 1 : -1 );
-      error -= 1;
-    }
   }
 };
 
@@ -376,22 +381,25 @@ const render = (
 
       const triangles = divideToTriangles(faceTransformed);
 
-      const {p1, p2, p3} = triangles[0];
+      const { p1, p2, p3 } = triangles[0];
       const e1 = p2.subtract(p1);
       const e2 = p3.subtract(p1);
       const crossProduct = e1.cross(e2);
       const eyeDirection = new Point(0, 0, 1);
-      //console.log(eyeDirection.dot(crossProduct));
+      // console.log(eyeDirection.dot(crossProduct));
       const isVisible = eyeDirection.dot(crossProduct) > 0;
 
+      const white = [255, 255, 255, 255];
       const red = [255, 0, 0, 255];
       const blue = [0, 0, 255, 255];
       const black = [0, 0, 0, 255];
       const gray = [200, 200, 200, 255];
       const lightGray = [220, 220, 220, 255];
-      const color = (meshNumber !== 0) ? red : (isVisible ? black : lightGray);
-      //Always draw faces that face the camera
-      const overrideZBuffer = (meshNumber !== 0 || !isVisible) ? false : true;
+
+      const lineColor = isVisible ? black : lightGray;
+      const color = (meshNumber !== 0) ? red : lineColor;
+      // Always draw faces that face the camera
+      const overrideZBuffer = meshNumber === 0 && isVisible;
 
       renderFaceOutline(
         faceTransformed,
@@ -405,10 +413,7 @@ const render = (
         return;
       }
 
-      triangles.forEach(triangle => {
-        const white = [255, 255, 255, 255];
-        const gray = [200, 200, 200, 255];
-        const black = [0, 0, 0, 255];
+      triangles.forEach((triangle) => {
         drawTriangle(
           triangle,
           white,

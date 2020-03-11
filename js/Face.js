@@ -29,9 +29,6 @@ class Face extends Array {
    */
   applyTransform(transform) {
     const transformed = this.map(transform.getMappingFunction());
-    // this.splice(0); // Remove all vertices
-    // transformed.forEach((transformedVertex) => this.push(transformedVertex));
-    // return this;
     return transformed;
   }
 }

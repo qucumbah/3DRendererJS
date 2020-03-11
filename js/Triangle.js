@@ -54,13 +54,10 @@ class Triangle extends Array {
     const points = [this.p1, this.p2, this.p3];
     points.sort((point1, point2) => point1.y - point2.y);
 
-    // Not sure what eslint wants from me here, can't destructure array to this
-    // properties
-    // eslint-disable-next-line prefer-destructuring
+    // Its a bit clearer without destructuring
+    /* eslint-disable prefer-destructuring */
     this.p1 = points[0];
-    // eslint-disable-next-line prefer-destructuring
     this.p2 = points[1];
-    // eslint-disable-next-line prefer-destructuring
     this.p3 = points[2];
   }
 }
